@@ -8,6 +8,7 @@ import {
   BriefcaseIcon,
   CalculatorIcon,
   CodeIcon,
+  CubeIcon,
   FastForwardIcon,
   FilmStripIcon,
   FlaskIcon,
@@ -37,9 +38,10 @@ const ICONS: Record<string, PhosphorIcon> = {
   "management-consulting": BriefcaseIcon,
   "accounting-audit": CalculatorIcon,
   // world-model capabilities
-  "motion-understanding": FilmStripIcon,
+  "video-understanding": FilmStripIcon,
   "action-anticipation": FastForwardIcon,
   "generative-physics": AtomIcon,
+  "physical-ai-generation": CubeIcon,
 };
 
 const SIZE = 300;

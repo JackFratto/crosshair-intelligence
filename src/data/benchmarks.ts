@@ -199,6 +199,19 @@ export const benchmarks: Benchmark[] = [
     url: "https://epic-kitchens.github.io/",
   },
   {
+    id: "perception-test",
+    name: "Perception Test",
+    category: "world-model",
+    domain: "Video Understanding",
+    description:
+      "A diagnostic video-QA benchmark probing memory, abstraction, physics, and semantics across real-world videos. Reported as multiple-choice accuracy from a video model aligned with an LLM.",
+    metric: "accuracy",
+    unit: "%",
+    higherIsBetter: true,
+    maxScore: 100,
+    url: "https://github.com/google-deepmind/perception_test",
+  },
+  {
     id: "physics-iq",
     name: "Physics-IQ",
     category: "world-model",
@@ -210,6 +223,19 @@ export const benchmarks: Benchmark[] = [
     higherIsBetter: true,
     maxScore: 100,
     url: "https://physics-iq.github.io/",
+  },
+  {
+    id: "pai-bench-g",
+    name: "PAI-Bench-G",
+    category: "world-model",
+    domain: "Physical-AI Generation",
+    description:
+      "Physical-AI video-generation benchmark (CVPR 2026): an MLLM-judged 'Domain' physical-plausibility score blended with a 'Quality' visual-fidelity score. Real source videos cap the scale near 83.9; higher is better.",
+    metric: "score",
+    unit: "pts",
+    higherIsBetter: true,
+    maxScore: 100,
+    url: "https://arxiv.org/abs/2512.01989",
   },
 ];
 

@@ -98,6 +98,13 @@ export const providers: Provider[] = [
     color: "#325ab4",
   },
   {
+    id: "tencent",
+    name: "Tencent",
+    shortName: "Hunyuan",
+    website: "https://hunyuan.tencent.com",
+    color: "#0052d9",
+  },
+  {
     id: "nvidia",
     name: "NVIDIA",
     website: "https://www.nvidia.com/en-us/ai/",

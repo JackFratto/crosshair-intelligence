@@ -51,8 +51,8 @@ const ROADMAP = [
     phase: "Phase 3 — World models",
     status: "later",
     points: [
-      "Track world models (V-JEPA 2, Genie 3, Cosmos, Marble, Sora, Veo) as a cited roster, attaching sparse per-benchmark scores wherever models actually publish them.",
-      "Surface fragmented suites — understanding & anticipation (Something-Something v2, EPIC-Kitchens-100) and generative physics (Physics-IQ) — without faking a composite the data can't support.",
+      "Track world models (V-JEPA 2, Cosmos, Veo 3, Wan, HunyuanVideo, Sora, Genie 3, Marble, Ray 3) as a cited roster, attaching per-benchmark scores wherever models actually publish them.",
+      "Surface fragmented suites — video understanding & anticipation (Something-Something v2, EPIC-Kitchens-100, Perception Test), generative physics (Physics-IQ), and physical-AI generation (PAI-Bench) — without faking a composite the data can't support.",
       "Co-develop benchmark definitions with the community as the field consolidates.",
     ],
   },

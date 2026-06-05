@@ -72,19 +72,20 @@ export const industriesById: Record<string, Industry> = Object.fromEntries(
 );
 
 /**
- * World-model "capability" axes. Unlike LLM industries, each maps to a single
- * benchmark — world-model evaluation is fragmented across non-overlapping
- * suites, so coverage is intentionally sparse and only a few models have any
- * data (e.g. V-JEPA 2 on understanding/anticipation, Sora on Physics-IQ).
+ * World-model "capability" axes. Unlike LLM industries, each maps to one or two
+ * benchmarks — world-model evaluation is fragmented across non-overlapping
+ * suites, so coverage is intentionally sparse and models cluster by type (e.g.
+ * V-JEPA 2 on understanding/anticipation; Sora on Physics-IQ; Veo / Cosmos /
+ * Wan / HunyuanVideo on PAI-Bench).
  */
 export const worldModelCapabilities: Industry[] = [
   {
-    id: "motion-understanding",
-    label: "Motion Understanding",
-    short: "Motion",
+    id: "video-understanding",
+    label: "Video Understanding",
+    short: "Understanding",
     description:
-      "Recognizing fine-grained temporal dynamics in video — what is happening and how things move, beyond static appearance.",
-    benchmarkIds: ["ssv2"],
+      "Recognizing motion and answering questions about real-world video — what is happening and how things move, beyond static appearance.",
+    benchmarkIds: ["ssv2", "perception-test"],
   },
   {
     id: "action-anticipation",
@@ -101,5 +102,13 @@ export const worldModelCapabilities: Industry[] = [
     description:
       "Whether generated video continuations obey physical principles — mechanics, fluids, optics — rather than merely looking realistic.",
     benchmarkIds: ["physics-iq"],
+  },
+  {
+    id: "physical-ai-generation",
+    label: "Physical-AI Generation",
+    short: "Physical AI",
+    description:
+      "Generation quality plus physical plausibility for embodied / physical-AI scenes — driving, robotics, ego-centric — judged on PAI-Bench.",
+    benchmarkIds: ["pai-bench-g"],
   },
 ];

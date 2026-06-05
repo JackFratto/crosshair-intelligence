@@ -9,9 +9,10 @@ export const AXIS_COLORS: Record<string, string> = {
   "management-consulting": "#fe640b", // peach
   "accounting-audit": "#df8e1d", // yellow
   // world-model capabilities
-  "motion-understanding": "#1e66f5", // blue
+  "video-understanding": "#1e66f5", // blue
   "action-anticipation": "#40a02b", // green
   "generative-physics": "#8839ef", // mauve
+  "physical-ai-generation": "#fe640b", // peach
 };
 
 export const AXIS_FALLBACK = "#1e66f5";
