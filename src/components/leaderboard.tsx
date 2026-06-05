@@ -1171,9 +1171,13 @@ function ScoreCell({
 function EmergingNote() {
   return (
     <div className="rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-      World-model evaluation is still consolidating. Benchmark definitions here
-      are <span className="text-foreground">proposals</span>, coverage is sparse
-      by design, and many cells read &ldquo;—&rdquo; until results exist.{" "}
+      World-model benchmarking is{" "}
+      <span className="text-foreground">fragmented</span>: there is no single
+      cross-model leaderboard. Columns come from non-overlapping suites measured
+      by different models under different protocols, so coverage is sparse, most
+      cells read &ldquo;—&rdquo;, and there is{" "}
+      <span className="text-foreground">no composite Crosshair Index</span> for
+      world models — only per-benchmark cells.{" "}
       <Link
         href="/about#roadmap"
         className="text-primary underline-offset-4 hover:underline"

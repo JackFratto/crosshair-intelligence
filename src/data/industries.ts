@@ -72,18 +72,19 @@ export const industriesById: Record<string, Industry> = Object.fromEntries(
 );
 
 /**
- * World-model "capability" axes. Unlike LLM industries, each currently maps to a
- * single benchmark domain — standardized world-model evaluation is still
- * emerging, so coverage is intentionally sparse and these carry no scores yet.
+ * World-model "capability" axes. Unlike LLM industries, each maps to a single
+ * benchmark — world-model evaluation is fragmented across non-overlapping
+ * suites, so coverage is intentionally sparse and only a few models have any
+ * data (e.g. V-JEPA 2 on understanding/anticipation, Sora on Physics-IQ).
  */
 export const worldModelCapabilities: Industry[] = [
   {
-    id: "physical-prediction",
-    label: "Physical Prediction",
-    short: "Physics",
+    id: "motion-understanding",
+    label: "Motion Understanding",
+    short: "Motion",
     description:
-      "Predicting how physical scenarios resolve — collisions, stability, and intuitive dynamics.",
-    benchmarkIds: ["physion-pp"],
+      "Recognizing fine-grained temporal dynamics in video — what is happening and how things move, beyond static appearance.",
+    benchmarkIds: ["ssv2"],
   },
   {
     id: "action-anticipation",
@@ -94,27 +95,11 @@ export const worldModelCapabilities: Industry[] = [
     benchmarkIds: ["ek100-anticipation"],
   },
   {
-    id: "generative-coherence",
-    label: "Generative Coherence",
-    short: "Coherence",
+    id: "generative-physics",
+    label: "Generative Physics",
+    short: "Gen. Physics",
     description:
-      "Realism and temporal consistency of predicted future frames (FVD — lower is better).",
-    benchmarkIds: ["fvd-rollout"],
-  },
-  {
-    id: "planning",
-    label: "Planning",
-    short: "Planning",
-    description:
-      "Success of model-based planning and imagined rollouts on embodied control tasks.",
-    benchmarkIds: ["planning-success"],
-  },
-  {
-    id: "spatial-coherence",
-    label: "Spatial Coherence",
-    short: "Spatial",
-    description:
-      "Geometric and 3D consistency of imagined worlds — object permanence under camera motion.",
-    benchmarkIds: ["world-consistency"],
+      "Whether generated video continuations obey physical principles — mechanics, fluids, optics — rather than merely looking realistic.",
+    benchmarkIds: ["physics-iq"],
   },
 ];

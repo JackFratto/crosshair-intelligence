@@ -111,11 +111,11 @@ export const providers: Provider[] = [
     color: "#334155",
   },
   {
-    id: "logical-intelligence",
-    name: "Logical Intelligence",
-    shortName: "Logical",
-    logo: "/logos/logical-intelligence.svg",
-    color: "#1c1c1c",
+    id: "luma",
+    name: "Luma AI",
+    shortName: "Luma",
+    website: "https://lumalabs.ai",
+    color: "#8b5cf6",
   },
 ];
 

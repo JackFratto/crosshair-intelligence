@@ -51,8 +51,8 @@ const ROADMAP = [
     phase: "Phase 3 — World models",
     status: "later",
     points: [
-      "Stand up harnesses for physical prediction, planning, and video coherence.",
-      "Track V-JEPA, Genie, Cosmos, and newcomers like Kona as results mature.",
+      "Track world models (V-JEPA 2, Genie 3, Cosmos, Marble, Sora, Veo) as a cited roster, attaching sparse per-benchmark scores wherever models actually publish them.",
+      "Surface fragmented suites — understanding & anticipation (Something-Something v2, EPIC-Kitchens-100) and generative physics (Physics-IQ) — without faking a composite the data can't support.",
       "Co-develop benchmark definitions with the community as the field consolidates.",
     ],
   },

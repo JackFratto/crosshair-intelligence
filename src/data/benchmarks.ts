@@ -166,69 +166,50 @@ export const benchmarks: Benchmark[] = [
   },
 
   // -------------------------------------------------------- World Model ----
+  // World-model evaluation is fragmented: there is no single cross-model
+  // leaderboard. The benchmarks below are the ones roster models actually
+  // publish — each populated by at least one cited result. Understanding and
+  // anticipation (V-JEPA 2) and generative physical plausibility (Physics-IQ)
+  // are measured by different models on non-overlapping suites, so the
+  // world-model category shows per-benchmark cells only (no composite index).
   {
-    id: "physion-pp",
-    name: "Physion++",
+    id: "ssv2",
+    name: "Something-Something v2",
     category: "world-model",
-    domain: "Physical Prediction",
+    domain: "Motion Understanding",
     description:
-      "Predict whether physical scenarios resolve as expected (will objects collide, fall, or stay stable?). Probes intuitive physics.",
+      "Action recognition over ~220k short clips of everyday object interactions; rewards genuine temporal/motion understanding over appearance. Reported as top-1 accuracy from an attentive probe on frozen features.",
     metric: "accuracy",
     unit: "%",
     higherIsBetter: true,
     maxScore: 100,
-    url: "https://physion.net",
+    url: "https://arxiv.org/abs/1706.04261",
   },
   {
     id: "ek100-anticipation",
-    name: "EK-100 Anticipation",
+    name: "EPIC-Kitchens-100 Anticipation",
     category: "world-model",
     domain: "Action Anticipation",
     description:
-      "EPIC-Kitchens-100 long-term action anticipation — forecast the next actions in egocentric video. Reported as mean top-5 recall.",
+      "Long-term action anticipation on egocentric kitchen video — forecast the (verb, noun) action one second before it happens. Reported as mean recall@5.",
     metric: "score",
-    unit: "recall",
+    unit: "recall@5",
     higherIsBetter: true,
     maxScore: 100,
-    url: "https://epic-kitchens.github.io/2025",
+    url: "https://epic-kitchens.github.io/",
   },
   {
-    id: "fvd-rollout",
-    name: "Video Prediction (FVD)",
+    id: "physics-iq",
+    name: "Physics-IQ",
     category: "world-model",
-    domain: "Generative Coherence",
+    domain: "Generative Physics",
     description:
-      "Fréchet Video Distance between predicted and ground-truth future frames. Measures rollout realism — lower is better.",
-    metric: "distance",
-    unit: "FVD",
-    higherIsBetter: false,
-    maxScore: null,
-    worstScore: 500,
-    url: "https://arxiv.org/abs/1812.01717",
-  },
-  {
-    id: "planning-success",
-    name: "Embodied Planning",
-    category: "world-model",
-    domain: "Planning",
-    description:
-      "Success rate of model-based planning / imagined rollouts on embodied control and navigation tasks.",
-    metric: "rate",
-    unit: "%",
-    higherIsBetter: true,
-    maxScore: 100,
-  },
-  {
-    id: "world-consistency",
-    name: "World Consistency",
-    category: "world-model",
-    domain: "Spatial Coherence",
-    description:
-      "Geometric and temporal consistency of generated/imagined worlds (object permanence, 3D coherence under camera motion).",
+      "Tests whether generative video models predict physically plausible continuations (solid/fluid mechanics, optics, thermodynamics, magnetism). The Physics-IQ Score is normalized to 0–100, where 100 is the variance between two real videos; even the best model scores far below.",
     metric: "score",
     unit: "pts",
     higherIsBetter: true,
     maxScore: 100,
+    url: "https://physics-iq.github.io/",
   },
 ];
 

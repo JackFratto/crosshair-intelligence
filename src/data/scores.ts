@@ -24,6 +24,11 @@ const thirdParty = (label: string, url?: string): ScoreSource => ({
   label,
   url,
 });
+const paper = (label: string, url?: string): ScoreSource => ({
+  kind: "paper",
+  label,
+  url,
+});
 
 // Shared third-party sources used across many models.
 const arena = thirdParty("LMArena (arena.ai)", "https://arena.ai/leaderboard/text");
@@ -150,6 +155,16 @@ const SRC2 = {
     "https://seed.bytedance.com/en/blog/seed-2-0-official-launch",
   ),
 };
+
+// World-model sources — independent papers / benchmarks, not vendor cards.
+const vjepa2Src = paper(
+  "Meta — V-JEPA 2 (arXiv:2506.09985)",
+  "https://arxiv.org/abs/2506.09985",
+);
+const physicsIqSrc = paper(
+  "Motamed et al. — Physics-IQ (arXiv:2501.09038)",
+  "https://arxiv.org/abs/2501.09038",
+);
 
 type Entry =
   | number
@@ -569,7 +584,37 @@ export const scores: Score[] = [
   }),
 
   // ----------------------------------------------------------- World Models
-  // Intentionally empty: standardized world-model evaluation is still emerging,
-  // so these models render as "awaiting data" rather than carrying invented
-  // numbers. See benchmarks.ts (world-model section) for the proposed suites.
+  // Sparse and per-benchmark by necessity — world-model benchmarking is
+  // fragmented, so only models with genuinely published numbers carry scores.
+  // V-JEPA 2 (understanding/anticipation) and the original Sora (Physics-IQ) are
+  // measured on non-overlapping suites; every other world model is tracked in
+  // models.ts with no scores. Each figure is cited and unverified.
+  ...buildScores(
+    "vjepa-2",
+    vjepa2Src,
+    {
+      ssv2: {
+        value: 77.3,
+        notes: "Top-1; attentive probe on frozen V-JEPA 2 features.",
+      },
+      "ek100-anticipation": {
+        value: 39.7,
+        notes:
+          "EPIC-Kitchens-100 long-term anticipation, recall@5 (SOTA at release).",
+      },
+    },
+    "2025-06-11",
+  ),
+  ...buildScores(
+    "sora",
+    physicsIqSrc,
+    {
+      "physics-iq": {
+        value: 8.7,
+        notes:
+          "Original Sora (image-to-video). Physics-IQ Score 0–100 (100 = real-video variance); best model in the study scored 24.1.",
+      },
+    },
+    "2025-01-16",
+  ),
 ];

@@ -138,8 +138,13 @@ export function buildLeaderboard(category: ModelCategory): LeaderboardData {
     }
 
     const coverage = benchmarks.length ? measured / benchmarks.length : 0;
+    // World models have no composite index: their benchmarks are fragmented
+    // across non-overlapping suites (different models, measured under different
+    // protocols), so averaging them would imply a head-to-head ranking the data
+    // can't support. They show per-benchmark cells only.
+    const suppressIndex = category === "world-model";
     const index =
-      coverage >= INDEX_COVERAGE_THRESHOLD && normals.length
+      !suppressIndex && coverage >= INDEX_COVERAGE_THRESHOLD && normals.length
         ? round1(normals.reduce((a, c) => a + c, 0) / normals.length)
         : null;
 
