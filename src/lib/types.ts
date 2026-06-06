@@ -147,3 +147,20 @@ export interface Pricing {
   /** Caching surcharge for writing to cache (e.g. Anthropic's write cost). */
   cacheWritePerM?: number;
 }
+
+/**
+ * Output throughput (tokens/sec) with provenance, like a {@link Score}. Speed is
+ * a deployment characteristic rather than a benchmark, so it lives beside
+ * pricing — but it carries a per-datum source because it varies by provider and
+ * reasoning effort and is third-party measured.
+ */
+export interface Speed {
+  /** Median output tokens per second (Artificial Analysis "Output Speed"). */
+  outputTps: number;
+  source: ScoreSource;
+  /** ISO-8601 date the figure was observed. */
+  date?: string;
+  /** Independently reproduced by a Crosshair maintainer (false until then). */
+  verified: boolean;
+  notes?: string;
+}

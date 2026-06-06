@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowDownIcon,
@@ -8,14 +8,13 @@ import {
   BriefcaseIcon,
   BuildingsIcon,
   CaretUpDownIcon,
-  ChartScatterIcon,
   CheckIcon,
   CoinsIcon,
+  GaugeIcon,
   GlobeIcon,
   InfoIcon,
   MagnifyingGlassIcon,
   SidebarSimpleIcon,
-  TableIcon,
   TextAlignLeftIcon,
   TreeStructureIcon,
 } from "@phosphor-icons/react/dist/ssr";
@@ -38,10 +37,15 @@ import { Tag, LICENSE_TAG } from "@/components/tag";
 import { CrosshairLogo } from "@/components/crosshair-logo";
 import { ProviderLogo } from "@/components/provider-logo";
 import { ModelPreview } from "@/components/model-preview";
-import { ParetoChart, type ParetoPoint } from "@/components/pareto-chart";
+import {
+  ParetoChart,
+  type ParetoPoint,
+  type MetricId,
+} from "@/components/pareto-chart";
 import { blendedPrice } from "@/lib/blended";
 import { hueSweepFill } from "@/lib/gradient";
 import { cn } from "@/lib/utils";
+import { compositeIndex } from "@/lib/leaderboard";
 import type { LeaderboardData, LeaderboardRow } from "@/lib/leaderboard";
 import type { ModelPreviewData } from "@/lib/skillweb";
 import type {
@@ -51,6 +55,10 @@ import type {
   ModelCategoryInfo,
   Provider,
 } from "@/lib/types";
+
+// useLayoutEffect warns during SSR; fall back to useEffect on the server.
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 type SortDir = "asc" | "desc";
 interface SortState {
@@ -125,11 +133,20 @@ export function Leaderboard({
       Math.ceil(Math.max(...xs) * 100) / 100,
     ];
   }, [datasets, previews]);
+  const speedBounds = useMemo<Range>(() => {
+    const xs = datasets.llm.rows
+      .map((r) => previews[r.model.id]?.speed?.outputTps)
+      .filter((x): x is number => typeof x === "number");
+    if (!xs.length) return [0, 200];
+    return [Math.floor(Math.min(...xs)), Math.ceil(Math.max(...xs))];
+  }, [datasets, previews]);
 
   const [category, setCategory] = useState<ModelCategory>("llm");
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const tableWrapRef = useRef<HTMLDivElement>(null);
+  const flipRects = useRef(new Map<string, number>());
   useEffect(() => {
     if (searchOpen) searchInputRef.current?.focus();
   }, [searchOpen]);
@@ -141,8 +158,10 @@ export function Leaderboard({
   const [providerQuery, setProviderQuery] = useState("");
   const [ctxRange, setCtxRange] = useState<Range>(ctxBounds);
   const [priceRange, setPriceRange] = useState<Range>(priceBounds);
+  const [speedRange, setSpeedRange] = useState<Range>(speedBounds);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [view, setView] = useState<"table" | "pareto">("table");
+  const [view, setView] = useState<"table" | "frontier" | "surface">("table");
+  const [pair, setPair] = useState<[MetricId, MetricId]>(["chi", "cost"]);
   const [hover, setHover] = useState<{
     model: Model;
     x: number;
@@ -153,6 +172,15 @@ export function Leaderboard({
   const info = categories.find((c) => c.id === category);
   const isLlm = category === "llm";
   const categoryIndustries = industries[category];
+
+  // Named view tabs choose the visualization; the metrics are its axes — the
+  // frontier uses 2 of the 3, the 3-D surface uses all three.
+  const axes: MetricId[] =
+    view === "frontier"
+      ? pair
+      : view === "surface"
+        ? ["chi", "cost", "speed"]
+        : [];
 
   const activeIndustry = industry
     ? (categoryIndustries.find((i) => i.id === industry) ?? null)
@@ -179,6 +207,8 @@ export function Leaderboard({
     isLlm && (ctxRange[0] > ctxBounds[0] || ctxRange[1] < ctxBounds[1]);
   const priceActive =
     isLlm && (priceRange[0] > priceBounds[0] || priceRange[1] < priceBounds[1]);
+  const speedActive =
+    isLlm && (speedRange[0] > speedBounds[0] || speedRange[1] < speedBounds[1]);
 
   function blendedOf(row: LeaderboardRow): number | null {
     const p = previews[row.model.id]?.pricing;
@@ -187,6 +217,18 @@ export function Leaderboard({
 
   function indexValueOf(row: LeaderboardRow): number | null {
     if (!selectedBenchmarkIds) return row.index;
+    // Mirror the server composite: aggregate field-relative standings (so an
+    // easy benchmark can't dominate a hard one) and impute a floor for missing
+    // benchmarks (LLMs only) so a model that omits one of the basket's
+    // benchmarks can't leapfrog a fully-covered peer. World models keep a plain
+    // absolute mean — their suites are non-overlapping.
+    if (isLlm) {
+      const vals = selectedBenchmarkIds
+        .map((bid) => row.cells[bid]?.relative)
+        .filter((v): v is number => typeof v === "number");
+      if (!vals.length) return null;
+      return compositeIndex(vals, selectedBenchmarkIds.length);
+    }
     const vals = selectedBenchmarkIds
       .map((bid) => row.cells[bid]?.normalized)
       .filter((v): v is number => typeof v === "number");
@@ -217,13 +259,20 @@ export function Leaderboard({
         const b = blendedOf(row);
         return b != null && b >= priceRange[0] && b <= priceRange[1];
       });
+    if (speedActive)
+      r = r.filter((row) => {
+        const s = previews[row.model.id]?.speed?.outputTps;
+        return s != null && s >= speedRange[0] && s <= speedRange[1];
+      });
 
     const valueFor = (row: LeaderboardRow, key: string): number | null =>
       key === "index"
         ? indexValueOf(row)
         : key === "price"
           ? blendedOf(row)
-          : (row.cells[key]?.normalized ?? null);
+          : key === "speed"
+            ? (previews[row.model.id]?.speed?.outputTps ?? null)
+            : (row.cells[key]?.normalized ?? null);
 
     return [...r].sort((a, b) => {
       if (sort.key === "model") {
@@ -248,10 +297,48 @@ export function Leaderboard({
     ctxRange,
     priceActive,
     priceRange,
+    speedActive,
+    speedRange,
     sort,
     selectedBenchmarkIds,
     previews,
   ]);
+
+  // FLIP: smoothly reflow / reorder rows when filters or sort change.
+  const rowSig = rows.map((r) => r.model.id).join("|");
+  useIsoLayoutEffect(() => {
+    const wrap = tableWrapRef.current;
+    if (!wrap) return;
+    const wrapTop = wrap.getBoundingClientRect().top;
+    const seen = new Set<string>();
+    wrap.querySelectorAll<HTMLElement>("[data-row-id]").forEach((el) => {
+      const id = el.dataset.rowId;
+      if (!id) return;
+      seen.add(id);
+      const top = el.getBoundingClientRect().top - wrapTop;
+      const prev = flipRects.current.get(id);
+      if (prev != null && Math.abs(prev - top) > 0.5) {
+        el.animate(
+          [
+            { transform: `translateY(${prev - top}px)` },
+            { transform: "translateY(0)" },
+          ],
+          { duration: 280, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+        );
+      } else if (prev == null) {
+        el.animate(
+          [
+            { opacity: 0, transform: "translateY(-6px)" },
+            { opacity: 1, transform: "translateY(0)" },
+          ],
+          { duration: 240, easing: "ease-out" },
+        );
+      }
+      flipRects.current.set(id, top);
+    });
+    for (const id of [...flipRects.current.keys()])
+      if (!seen.has(id)) flipRects.current.delete(id);
+  }, [rowSig]);
 
   function toggleSort(key: string) {
     setSort((prev) =>
@@ -269,6 +356,7 @@ export function Leaderboard({
     setProviderQuery("");
     setCtxRange(ctxBounds);
     setPriceRange(priceBounds);
+    setSpeedRange(speedBounds);
   }
 
   // Switch the table to an industry's view. Filters are deliberately left
@@ -289,11 +377,15 @@ export function Leaderboard({
     setProviderQuery("");
     setCtxRange(ctxBounds);
     setPriceRange(priceBounds);
+    setSpeedRange(speedBounds);
   }
 
   // Industry is a view, not a filter — the badge/reset cover the filters only.
   const activeCount =
-    (providerSel.length ? 1 : 0) + (ctxActive ? 1 : 0) + (priceActive ? 1 : 0);
+    (providerSel.length ? 1 : 0) +
+    (ctxActive ? 1 : 0) +
+    (priceActive ? 1 : 0) +
+    (speedActive ? 1 : 0);
 
   const indexLabel = activeIndustry
     ? (activeIndustry.short ?? activeIndustry.label)
@@ -322,6 +414,7 @@ export function Leaderboard({
         label: row.model.name,
         cost,
         chi,
+        speed: previews[row.model.id]?.speed?.outputTps,
         provider: row.provider,
         license: LICENSE_TAG[row.model.license].label,
       });
@@ -499,6 +592,21 @@ export function Leaderboard({
                       />
                     </FilterField>
                   )}
+
+                  {/* Output speed — log-scaled tok/s */}
+                  {isLlm && (
+                    <FilterField Icon={GaugeIcon} label="Speed">
+                      <RangeSlider
+                        min={speedBounds[0]}
+                        max={speedBounds[1]}
+                        value={speedRange}
+                        onChange={setSpeedRange}
+                        scale="log"
+                        format={(v) => `${Math.round(v)} t/s`}
+                        accent="#8839ef"
+                      />
+                    </FilterField>
+                  )}
                 </div>
               </div>
 
@@ -628,28 +736,25 @@ export function Leaderboard({
                     className="h-full min-w-0 flex-1 bg-transparent pr-2.5 text-sm outline-none placeholder:text-muted-foreground"
                   />
                 </div>
-                <ViewToggle
-                  view={view}
-                  onToggle={() =>
-                    setView((v) => (v === "table" ? "pareto" : "table"))
-                  }
-                />
+                {isLlm && <ViewTabs view={view} onView={setView} />}
               </div>
             </div>
 
             {info?.status === "emerging" && <EmergingNote />}
 
-            {view === "pareto" ? (
-              isLlm ? (
-                <ParetoChart points={paretoPoints} className="w-full" />
-              ) : (
-                <div className="rounded-xl border border-border/70 bg-card/40 p-8 text-center text-sm text-muted-foreground">
-                  The cost–CHI Pareto is available for language models.
-                </div>
-              )
+            {isLlm && view !== "table" ? (
+              <ParetoChart
+                points={paretoPoints}
+                axes={axes}
+                onPair={setPair}
+                className="w-full"
+              />
             ) : (
               <>
-                <div className="overflow-hidden rounded-xl border border-border/70 bg-card/40">
+                <div
+                  ref={tableWrapRef}
+                  className="overflow-hidden rounded-xl border border-border/70 bg-card/40"
+                >
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
@@ -687,9 +792,15 @@ export function Leaderboard({
                               <span className="font-medium">
                                 CHI (Crosshair Index)
                               </span>{" "}
-                              — the mean of each benchmark normalized to 0–100
-                              (direction-aware). Shown only when a model covers
-                              at least half of the category&rsquo;s benchmarks.
+                              — the mean of a model&rsquo;s standing{" "}
+                              <em>relative to the field</em> on each benchmark, so
+                              an easy benchmark can&rsquo;t outweigh a hard one
+                              (e.g. Humanity&rsquo;s Last Exam) and coverage
+                              alone can&rsquo;t carry a model. Undisclosed
+                              benchmarks count as a mild below-median floor, so
+                              omitting one only ever lowers the index. Shown once
+                              a model covers at least 40% of the category&rsquo;s
+                              benchmarks.
                             </TooltipContent>
                           </Tooltip>
                         )}
@@ -713,6 +824,7 @@ export function Leaderboard({
                   {rows.map((row, i) => (
                     <TableRow
                       key={row.model.id}
+                      data-row-id={row.model.id}
                       className="group hover:bg-muted"
                     >
                       <TableCell className="sticky left-0 z-10 bg-card text-center align-middle group-hover:bg-muted">
@@ -804,40 +916,45 @@ export function Leaderboard({
   );
 }
 
-function ViewToggle({
+type View = "table" | "frontier" | "surface";
+const VIEW_TABS: { id: View; label: string; title: string }[] = [
+  { id: "table", label: "Table", title: "Ranked leaderboard" },
+  { id: "frontier", label: "Frontier", title: "2-D Pareto frontier of two metrics" },
+  { id: "surface", label: "3D", title: "3-D Pareto surface of all three metrics" },
+];
+
+/**
+ * View switcher: Table / Frontier / 3D. The axis pickers for the Frontier live
+ * in the chart header (see ParetoChart); the 3-D surface always uses all three.
+ */
+function ViewTabs({
   view,
-  onToggle,
+  onView,
 }: {
-  view: "table" | "pareto";
-  onToggle: () => void;
+  view: View;
+  onView: (v: View) => void;
 }) {
+  const segment =
+    "rounded-md px-2.5 py-1 text-xs font-medium transition-colors";
+  const on = "bg-background text-foreground shadow-sm ring-1 ring-border";
+  const off = "text-muted-foreground hover:text-foreground";
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-label={view === "table" ? "Show Pareto chart" : "Show table"}
-      title={view === "table" ? "Pareto view" : "Table view"}
-      className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-background text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-    >
-      <ChartScatterIcon
-        weight="thin"
-        className={cn(
-          "col-start-1 row-start-1 size-5 transition-all duration-300",
-          view === "table"
-            ? "scale-100 rotate-0 opacity-100"
-            : "scale-50 -rotate-90 opacity-0",
-        )}
-      />
-      <TableIcon
-        weight="thin"
-        className={cn(
-          "col-start-1 row-start-1 size-5 transition-all duration-300",
-          view === "pareto"
-            ? "scale-100 rotate-0 opacity-100"
-            : "scale-50 rotate-90 opacity-0",
-        )}
-      />
-    </button>
+    <div className="flex shrink-0 items-center gap-2">
+      <div className="flex rounded-lg bg-muted/50 p-0.5">
+        {VIEW_TABS.map((v) => (
+          <button
+            key={v.id}
+            type="button"
+            aria-pressed={view === v.id}
+            title={v.title}
+            onClick={() => onView(v.id)}
+            className={cn(segment, view === v.id ? on : off)}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -858,7 +975,7 @@ function CategoryToggle({
       aria-label="Toggle between Language Models and World Models"
       onClick={() => onChange(category === "llm" ? "world-model" : "llm")}
       className={cn(
-        "relative grid h-9 grid-cols-2 items-center rounded-lg border border-border bg-muted/50 p-0.5 text-sm font-medium select-none",
+        "relative grid h-9 grid-cols-2 items-center rounded-lg bg-muted/50 p-0.5 text-sm font-medium select-none",
         className,
       )}
     >

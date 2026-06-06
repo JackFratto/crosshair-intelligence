@@ -13,6 +13,7 @@ import {
 } from "@/data/industries";
 import { scores } from "@/data/scores";
 import { pricing } from "@/data/pricing";
+import { speed } from "@/data/speed";
 import type {
   DatasetMeta,
   ModelCategory,
@@ -34,6 +35,7 @@ export {
   worldModelCapabilities,
   scores,
   pricing,
+  speed,
 };
 
 export const DATASET_META: DatasetMeta = {

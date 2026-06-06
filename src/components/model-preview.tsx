@@ -157,6 +157,18 @@ export const ModelPreview = memo(function ModelPreview({
         </div>
       )}
 
+      {preview.speed && (
+        <div className="flex items-baseline justify-between border-t border-border/60 pt-2.5 text-xs">
+          <span className="text-muted-foreground">
+            Output speed{" "}
+            <span className="text-muted-foreground/70">(tok/s)</span>
+          </span>
+          <span className="tabular font-medium">
+            {Math.round(preview.speed.outputTps)}
+          </span>
+        </div>
+      )}
+
       <dl className="grid grid-cols-3 gap-2 border-t border-border/60 pt-2.5 text-xs">
         {meta.map((m) => (
           <div key={m.label}>
