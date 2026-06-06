@@ -72,18 +72,20 @@ export const industriesById: Record<string, Industry> = Object.fromEntries(
 );
 
 /**
- * World-model "capability" axes. Unlike LLM industries, each currently maps to a
- * single benchmark domain — standardized world-model evaluation is still
- * emerging, so coverage is intentionally sparse and these carry no scores yet.
+ * World-model "capability" axes. Unlike LLM industries, each maps to one or two
+ * benchmarks — world-model evaluation is fragmented across non-overlapping
+ * suites, so coverage is intentionally sparse and models cluster by type (e.g.
+ * V-JEPA 2 on understanding/anticipation; Sora on Physics-IQ; Veo / Cosmos /
+ * Wan / HunyuanVideo on PAI-Bench).
  */
 export const worldModelCapabilities: Industry[] = [
   {
-    id: "physical-prediction",
-    label: "Physical Prediction",
-    short: "Physics",
+    id: "video-understanding",
+    label: "Video Understanding",
+    short: "Understanding",
     description:
-      "Predicting how physical scenarios resolve — collisions, stability, and intuitive dynamics.",
-    benchmarkIds: ["physion-pp"],
+      "Recognizing motion and answering questions about real-world video — what is happening and how things move, beyond static appearance.",
+    benchmarkIds: ["ssv2", "perception-test"],
   },
   {
     id: "action-anticipation",
@@ -94,27 +96,19 @@ export const worldModelCapabilities: Industry[] = [
     benchmarkIds: ["ek100-anticipation"],
   },
   {
-    id: "generative-coherence",
-    label: "Generative Coherence",
-    short: "Coherence",
+    id: "generative-physics",
+    label: "Generative Physics",
+    short: "Gen. Physics",
     description:
-      "Realism and temporal consistency of predicted future frames (FVD — lower is better).",
-    benchmarkIds: ["fvd-rollout"],
+      "Whether generated video continuations obey physical principles — mechanics, fluids, optics — rather than merely looking realistic.",
+    benchmarkIds: ["physics-iq"],
   },
   {
-    id: "planning",
-    label: "Planning",
-    short: "Planning",
+    id: "physical-ai-generation",
+    label: "Physical-AI Generation",
+    short: "Physical AI",
     description:
-      "Success of model-based planning and imagined rollouts on embodied control tasks.",
-    benchmarkIds: ["planning-success"],
-  },
-  {
-    id: "spatial-coherence",
-    label: "Spatial Coherence",
-    short: "Spatial",
-    description:
-      "Geometric and 3D consistency of imagined worlds — object permanence under camera motion.",
-    benchmarkIds: ["world-consistency"],
+      "Generation quality plus physical plausibility for embodied / physical-AI scenes — driving, robotics, ego-centric — judged on PAI-Bench.",
+    benchmarkIds: ["pai-bench-g"],
   },
 ];

@@ -24,6 +24,11 @@ const thirdParty = (label: string, url?: string): ScoreSource => ({
   label,
   url,
 });
+const paper = (label: string, url?: string): ScoreSource => ({
+  kind: "paper",
+  label,
+  url,
+});
 
 // Shared third-party sources used across many models.
 const arena = thirdParty("LMArena (arena.ai)", "https://arena.ai/leaderboard/text");
@@ -150,6 +155,24 @@ const SRC2 = {
     "https://seed.bytedance.com/en/blog/seed-2-0-official-launch",
   ),
 };
+
+// World-model sources — independent papers / benchmarks, not vendor cards.
+const vjepa2Src = paper(
+  "Meta — V-JEPA 2 (arXiv:2506.09985)",
+  "https://arxiv.org/abs/2506.09985",
+);
+const physicsIqSrc = paper(
+  "Motamed et al. — Physics-IQ (arXiv:2501.09038)",
+  "https://arxiv.org/abs/2501.09038",
+);
+const physicsIqBoard = thirdParty(
+  "Physics-IQ leaderboard (google-deepmind/physics-IQ-benchmark)",
+  "https://github.com/google-deepmind/physics-IQ-benchmark",
+);
+const paiBenchSrc = paper(
+  "PAI-Bench (arXiv:2512.01989, Table 3)",
+  "https://arxiv.org/abs/2512.01989",
+);
 
 type Entry =
   | number
@@ -569,7 +592,98 @@ export const scores: Score[] = [
   }),
 
   // ----------------------------------------------------------- World Models
-  // Intentionally empty: standardized world-model evaluation is still emerging,
-  // so these models render as "awaiting data" rather than carrying invented
-  // numbers. See benchmarks.ts (world-model section) for the proposed suites.
+  // Sparse and per-benchmark by necessity — world-model benchmarking is
+  // fragmented, so only models with genuinely published numbers carry scores.
+  // V-JEPA 2 (understanding/anticipation) and the original Sora (Physics-IQ) are
+  // measured on non-overlapping suites; every other world model is tracked in
+  // models.ts with no scores. Each figure is cited and unverified.
+  ...buildScores(
+    "vjepa-2",
+    vjepa2Src,
+    {
+      ssv2: {
+        value: 77.3,
+        notes: "Top-1; attentive probe on frozen V-JEPA 2 features.",
+      },
+      "ek100-anticipation": {
+        value: 39.7,
+        notes:
+          "EPIC-Kitchens-100 long-term anticipation, recall@5 (SOTA at release).",
+      },
+      "perception-test": {
+        value: 84.0,
+        notes:
+          "ViT-g encoder aligned with Llama 3.1 8B; multiple-choice accuracy.",
+      },
+    },
+    "2025-06-11",
+  ),
+  ...buildScores(
+    "sora",
+    physicsIqSrc,
+    {
+      "physics-iq": {
+        value: 8.7,
+        notes:
+          "Original Sora (image-to-video); Physics-IQ Score 0–100 (100 = real-video variance).",
+      },
+    },
+    "2025-01-16",
+  ),
+  ...buildScores(
+    "sora-2",
+    physicsIqBoard,
+    {
+      "physics-iq": {
+        value: 42.3,
+        notes:
+          "Sora 2 (image-to-video) on the maintained Physics-IQ leaderboard — a large jump over the original Sora's 8.7.",
+      },
+    },
+    "2026-04-01",
+  ),
+  ...buildScores(
+    "veo-3",
+    paiBenchSrc,
+    {
+      "pai-bench-g": {
+        value: 82.2,
+        notes: "Veo3; PAI-Bench-G Overall (independent paper leaderboard).",
+      },
+    },
+    "2025-12-02",
+  ),
+  ...buildScores(
+    "wan-2-2",
+    paiBenchSrc,
+    {
+      "pai-bench-g": {
+        value: 82.3,
+        notes: "Wan2.2-I2V-A14B; PAI-Bench-G Overall — top open model.",
+      },
+    },
+    "2025-12-02",
+  ),
+  ...buildScores(
+    "cosmos-predict-2-5",
+    paiBenchSrc,
+    {
+      "pai-bench-g": {
+        value: 81.4,
+        notes: "Cosmos-Predict2.5-2B; PAI-Bench-G Overall.",
+      },
+    },
+    "2025-12-02",
+  ),
+  ...buildScores(
+    "hunyuanvideo",
+    paiBenchSrc,
+    {
+      "pai-bench-g": {
+        value: 77.6,
+        notes: "HunyuanVideo-I2V; PAI-Bench-G Overall.",
+      },
+    },
+    "2025-12-02",
+  ),
 ];

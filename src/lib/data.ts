@@ -13,6 +13,7 @@ import {
 } from "@/data/industries";
 import { scores } from "@/data/scores";
 import { pricing } from "@/data/pricing";
+import { speed } from "@/data/speed";
 import type {
   DatasetMeta,
   ModelCategory,
@@ -34,12 +35,13 @@ export {
   worldModelCapabilities,
   scores,
   pricing,
+  speed,
 };
 
 export const DATASET_META: DatasetMeta = {
   seed: false,
   lastUpdated: "2026-06-04",
-  note: "Figures are sourced from vendor model cards, Artificial Analysis, and the LMArena (arena.ai) & SWE-bench leaderboards as of June 2026, and are cited per cell. They are vendor- or third-party-reported and have NOT been independently reproduced by Crosshair (every score is marked unverified). Benchmarks and harnesses differ between vendors, so treat cross-model comparisons as directional.",
+  note: "Figures are sourced from vendor model cards, Artificial Analysis, and the LMArena (arena.ai) & SWE-bench leaderboards as of June 2026, and are cited per cell. They are vendor- or third-party-reported and have NOT been independently reproduced by Crosshair (every score is marked unverified). Benchmarks and harnesses differ between vendors, so treat cross-model comparisons as directional. World-model figures are sparser still and come from non-overlapping benchmark suites, so that category shows per-benchmark cells only and is not combined into a composite index.",
 };
 
 export const CATEGORIES: ModelCategoryInfo[] = [

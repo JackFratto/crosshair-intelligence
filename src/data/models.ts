@@ -490,8 +490,11 @@ export const models: Model[] = [
   },
 
   // -------------------------------------------------- World Models ---------
-  // Tracked, but with no scores: standardized world-model evaluation is still
-  // emerging, so this category is "awaiting data" by design.
+  // World-model benchmarking is fragmented in 2026 — there is no single
+  // cross-model leaderboard, and many flagship systems (Genie 3, Marble, Sora,
+  // Veo, Ray 3) ship demos rather than standardized numbers. Models that DO
+  // publish citable results carry sparse, per-benchmark scores (see scores.ts);
+  // the rest are tracked as cited "awaiting data" entries.
   {
     id: "vjepa-2",
     name: "V-JEPA 2",
@@ -504,7 +507,7 @@ export const models: Model[] = [
     license: "open-weights",
     website: "https://ai.meta.com/vjepa/",
     description:
-      "Self-supervised video joint-embedding predictive architecture; learns world dynamics for prediction and robot planning.",
+      "Self-supervised video joint-embedding predictive architecture; learns world dynamics for motion understanding, action anticipation, and zero-shot robot planning.",
   },
   {
     id: "genie-3",
@@ -516,50 +519,121 @@ export const models: Model[] = [
     contextWindow: null,
     modalities: ["video", "action", "3d"],
     license: "research",
-    website: "https://deepmind.google",
+    website: "https://deepmind.google/models/genie/",
     description:
-      "Foundation world model that generates interactive, controllable environments in real time.",
+      "Foundation world model that generates interactive, controllable environments in real time. Shown qualitatively — DeepMind publishes no standardized cross-model benchmark numbers.",
   },
   {
-    id: "cosmos-predict",
-    name: "Cosmos Predict",
+    id: "cosmos-predict-2-5",
+    name: "Cosmos Predict 2.5",
     providerId: "nvidia",
     category: "world-model",
-    releaseDate: "2025-01-06",
-    paramsB: 14,
+    releaseDate: "2025-11-01",
+    paramsB: 2,
     contextWindow: null,
     modalities: ["video", "3d", "action"],
     license: "open-weights",
-    website: "https://www.nvidia.com/en-us/ai/cosmos/",
+    website: "https://research.nvidia.com/labs/cosmos-lab/cosmos-predict2.5/",
     description:
-      "World Foundation Models for physical AI — future-frame prediction for robotics and autonomous systems.",
+      "NVIDIA's open-weights World Foundation Model for physical AI (future-frame prediction for robotics and AV); the 2B variant is independently scored on PAI-Bench-G.",
   },
   {
-    id: "lwm-1",
-    name: "Large World Model",
+    id: "worldlabs-marble",
+    name: "Marble",
     providerId: "world-labs",
     category: "world-model",
-    releaseDate: "2025-09-01",
+    releaseDate: "2025-11-12",
     paramsB: null,
     contextWindow: null,
     modalities: ["image", "video", "3d"],
     license: "proprietary",
     website: "https://www.worldlabs.ai",
     description:
-      "Spatially-grounded generative world model producing persistent, explorable 3D scenes.",
+      "World Labs' spatially-grounded generative model — persistent, editable 3D scenes from text, images, or video. Marketed on persistence/editability; no standardized benchmarks published.",
   },
   {
-    id: "kona",
-    name: "Kona",
-    providerId: "logical-intelligence",
+    id: "sora",
+    name: "Sora",
+    providerId: "openai",
     category: "world-model",
-    releaseDate: undefined,
+    releaseDate: "2024-12-09",
     paramsB: null,
     contextWindow: null,
-    modalities: ["video", "action"],
-    license: "unknown",
+    modalities: ["video"],
+    license: "proprietary",
+    website: "https://openai.com/sora/",
     description:
-      "Logical Intelligence's world model — tracked here; standardized results aren't available yet.",
+      "OpenAI's text/image-to-video model — the system that popularized 'video as world simulator'. The original Sora was independently scored on Physics-IQ, where generative physical understanding proved severely limited.",
+  },
+  {
+    id: "sora-2",
+    name: "Sora 2",
+    providerId: "openai",
+    category: "world-model",
+    releaseDate: "2025-09-30",
+    paramsB: null,
+    contextWindow: null,
+    modalities: ["video", "audio"],
+    license: "proprietary",
+    website: "https://openai.com/index/sora-2/",
+    description:
+      "OpenAI's flagship video+audio model (the 'GPT-3.5 moment for video'); a large jump in physical plausibility over the original Sora. Consumer app retired Apr 2026, API through Sep 2026.",
+  },
+  {
+    id: "veo-3",
+    name: "Veo 3",
+    providerId: "google-deepmind",
+    category: "world-model",
+    releaseDate: "2025-05-20",
+    paramsB: null,
+    contextWindow: null,
+    modalities: ["video", "audio"],
+    license: "proprietary",
+    website: "https://deepmind.google/models/veo/",
+    description:
+      "Google DeepMind's text/image-to-video model with native audio and real-world physics; among the top performers on the PAI-Bench physical-AI generation benchmark.",
+  },
+  {
+    id: "wan-2-2",
+    name: "Wan 2.2",
+    providerId: "alibaba",
+    category: "world-model",
+    releaseDate: "2025-07-28",
+    paramsB: null,
+    contextWindow: null,
+    modalities: ["video"],
+    license: "open-weights",
+    website: "https://github.com/Wan-Video/Wan2.2",
+    description:
+      "Alibaba Tongyi Lab's open-weights MoE video generator (Apache-2.0); the I2V-A14B variant leads the open models on PAI-Bench-G.",
+  },
+  {
+    id: "hunyuanvideo",
+    name: "HunyuanVideo",
+    providerId: "tencent",
+    category: "world-model",
+    releaseDate: "2024-12-03",
+    paramsB: 13,
+    contextWindow: null,
+    modalities: ["video"],
+    license: "open-weights",
+    website: "https://github.com/Tencent-Hunyuan/HunyuanVideo",
+    description:
+      "Tencent's 13B open-weights video foundation model; the image-to-video variant is benchmarked on PAI-Bench-G.",
+  },
+  {
+    id: "luma-ray-3",
+    name: "Ray 3",
+    providerId: "luma",
+    category: "world-model",
+    releaseDate: "2026-01-26",
+    paramsB: null,
+    contextWindow: null,
+    modalities: ["video"],
+    license: "proprietary",
+    website: "https://lumalabs.ai/ray",
+    description:
+      "Luma's reasoning-driven video model with 3D-aware generation and native HDR. Demos only — no standardized cross-model benchmark results published.",
   },
 ];
 

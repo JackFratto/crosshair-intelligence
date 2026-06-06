@@ -98,6 +98,13 @@ export const providers: Provider[] = [
     color: "#325ab4",
   },
   {
+    id: "tencent",
+    name: "Tencent",
+    shortName: "Hunyuan",
+    website: "https://hunyuan.tencent.com",
+    color: "#0052d9",
+  },
+  {
     id: "nvidia",
     name: "NVIDIA",
     website: "https://www.nvidia.com/en-us/ai/",
@@ -111,11 +118,11 @@ export const providers: Provider[] = [
     color: "#334155",
   },
   {
-    id: "logical-intelligence",
-    name: "Logical Intelligence",
-    shortName: "Logical",
-    logo: "/logos/logical-intelligence.svg",
-    color: "#1c1c1c",
+    id: "luma",
+    name: "Luma AI",
+    shortName: "Luma",
+    website: "https://lumalabs.ai",
+    color: "#8b5cf6",
   },
 ];
 

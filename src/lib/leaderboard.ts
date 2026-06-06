@@ -21,8 +21,17 @@ import type {
 export interface LeaderboardCell {
   value: number;
   display: string;
-  /** 0–100, used for in-cell bar widths. */
+  /** 0–100 absolute (value vs. the benchmark's max), used for in-cell bars. */
   normalized: number;
+  /**
+   * 0–100 standing *relative to the field* on this benchmark (direction-aware
+   * min–max within the column). This — not {@link normalized} — feeds the
+   * composite, so an easy benchmark where everyone clusters at ~90% can't
+   * outweigh a brutal one where everyone clusters at ~40%: both span 0–100 by
+   * how a model ranks against its peers. 50 when a benchmark has a single
+   * reporter (no field to rank against).
+   */
+  relative: number;
   /** Best score in this benchmark column (respecting direction). */
   isBest: boolean;
   verified: boolean;
@@ -59,6 +68,47 @@ const INDEX_COVERAGE_THRESHOLD = 0.4;
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
+/**
+ * Standing (on the 0–100 *relative* scale — see {@link LeaderboardCell.relative})
+ * imputed for a benchmark a model has NOT disclosed. Undisclosed benchmarks are
+ * folded into the composite at this slightly-below-median floor rather than
+ * dropped from the mean.
+ *
+ * Two failure modes this guards against at once:
+ *   1. Dropping missing benchmarks lets a model climb by omitting one it would
+ *      score poorly on (e.g. Humanity's Last Exam) — the honest reporter of a
+ *      mediocre figure gets punished while the one that reports nothing floats up.
+ *   2. A flat *absolute* floor over-rewards sheer coverage: a model that happens
+ *      to report an "easy" high-scoring benchmark (LiveCodeBench, ~90%) towers
+ *      over peers who simply didn't, regardless of real capability.
+ *
+ * Imputing on the relative scale fixes (2) — 40 means "a touch below the median
+ * model on that benchmark," a uniform, mild penalty across columns — while still
+ * fixing (1), since the floor sits below median so omitting can never *help* a
+ * front-runner. Tunable: raise toward 50 to make missing data neutral, lower to
+ * sharpen the penalty.
+ */
+export const MISSING_PENALTY_FLOOR = 40;
+
+/**
+ * Composite of a model's relative standings across a set of `benchmarkCount`
+ * benchmarks. Benchmarks the model is missing are imputed at
+ * {@link MISSING_PENALTY_FLOOR} so incomplete coverage is mildly penalized rather
+ * than silently ignored. Expects relative (not absolute) inputs so every
+ * benchmark weighs the same. Returns null only for an empty benchmark set.
+ */
+export function compositeIndex(
+  relativeStandings: number[],
+  benchmarkCount: number,
+): number | null {
+  if (benchmarkCount <= 0) return null;
+  const missing = Math.max(0, benchmarkCount - relativeStandings.length);
+  const sum =
+    relativeStandings.reduce((a, c) => a + c, 0) +
+    MISSING_PENALTY_FLOOR * missing;
+  return round1(sum / benchmarkCount);
+}
+
 export function formatValue(b: Benchmark, value: number): string {
   if (b.metric === "elo") {
     return Math.round(value).toLocaleString("en-US");
@@ -92,6 +142,23 @@ function normalizeValue(b: Benchmark, value: number, column: number[]): number {
   return (b.higherIsBetter ? t : 1 - t) * 100;
 }
 
+/**
+ * A model's standing on a benchmark *relative to the field*: direction-aware
+ * min–max within the column, on 0–100. Unlike {@link normalizeValue} (which
+ * scales against the benchmark's theoretical max), this scales against where
+ * models actually land, so every benchmark contributes on the same footing to
+ * the composite regardless of its absolute difficulty. Returns 50 when the
+ * column has fewer than two distinct reporters — there's no field to rank in.
+ */
+function relativeValue(b: Benchmark, value: number, column: number[]): number {
+  if (column.length < 2) return 50;
+  const min = Math.min(...column);
+  const max = Math.max(...column);
+  if (max === min) return 50;
+  const t = (value - min) / (max - min);
+  return clamp01(b.higherIsBetter ? t : 1 - t) * 100;
+}
+
 export function buildLeaderboard(category: ModelCategory): LeaderboardData {
   const benchmarks = benchmarksFor(category);
   const models = modelsFor(category);
@@ -113,7 +180,7 @@ export function buildLeaderboard(category: ModelCategory): LeaderboardData {
 
   const rows: LeaderboardRow[] = models.map((model) => {
     const cells: Record<string, LeaderboardCell | null> = {};
-    const normals: number[] = [];
+    const relatives: number[] = [];
     let measured = 0;
 
     for (const b of benchmarks) {
@@ -123,12 +190,13 @@ export function buildLeaderboard(category: ModelCategory): LeaderboardData {
         continue;
       }
       measured += 1;
-      const normalized = normalizeValue(b, sc.value, columns[b.id]);
-      normals.push(normalized);
+      const relative = relativeValue(b, sc.value, columns[b.id]);
+      relatives.push(relative);
       cells[b.id] = {
         value: sc.value,
         display: formatValue(b, sc.value),
-        normalized,
+        normalized: normalizeValue(b, sc.value, columns[b.id]),
+        relative,
         isBest: bestValue[b.id] !== undefined && sc.value === bestValue[b.id],
         verified: sc.verified,
         source: sc.source,
@@ -138,9 +206,14 @@ export function buildLeaderboard(category: ModelCategory): LeaderboardData {
     }
 
     const coverage = benchmarks.length ? measured / benchmarks.length : 0;
+    // World models have no composite index: their benchmarks are fragmented
+    // across non-overlapping suites (different models, measured under different
+    // protocols), so averaging them would imply a head-to-head ranking the data
+    // can't support. They show per-benchmark cells only.
+    const suppressIndex = category === "world-model";
     const index =
-      coverage >= INDEX_COVERAGE_THRESHOLD && normals.length
-        ? round1(normals.reduce((a, c) => a + c, 0) / normals.length)
+      !suppressIndex && coverage >= INDEX_COVERAGE_THRESHOLD && relatives.length
+        ? compositeIndex(relatives, benchmarks.length)
         : null;
 
     return {

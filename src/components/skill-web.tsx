@@ -12,7 +12,6 @@ import {
   FastForwardIcon,
   FilmStripIcon,
   FlaskIcon,
-  PathIcon,
   ScalesIcon,
   StethoscopeIcon,
 } from "@phosphor-icons/react/dist/ssr";
@@ -39,11 +38,10 @@ const ICONS: Record<string, PhosphorIcon> = {
   "management-consulting": BriefcaseIcon,
   "accounting-audit": CalculatorIcon,
   // world-model capabilities
-  "physical-prediction": AtomIcon,
+  "video-understanding": FilmStripIcon,
   "action-anticipation": FastForwardIcon,
-  "generative-coherence": FilmStripIcon,
-  planning: PathIcon,
-  "spatial-coherence": CubeIcon,
+  "generative-physics": AtomIcon,
+  "physical-ai-generation": CubeIcon,
 };
 
 const SIZE = 300;

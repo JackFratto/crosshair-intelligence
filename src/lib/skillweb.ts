@@ -4,13 +4,18 @@
  * so each industry score is the mean of the model's 0–100 normalized scores on
  * that industry's benchmarks.
  */
-import { buildLeaderboard, type LeaderboardCell } from "@/lib/leaderboard";
+import {
+  buildLeaderboard,
+  compositeIndex,
+  type LeaderboardCell,
+} from "@/lib/leaderboard";
 import {
   benchmarksById,
   industries,
   industriesById,
   modelsById,
   pricing,
+  speed,
   worldModelCapabilities,
 } from "@/lib/data";
 import type {
@@ -20,6 +25,7 @@ import type {
   ModelCategory,
   Pricing,
   Provider,
+  Speed,
 } from "@/lib/types";
 
 export interface SkillWebBenchmark {
@@ -62,10 +68,22 @@ export function buildSkillWeb(modelId: string): SkillWebData | null {
       cell: row.cells[bid] ?? null,
     }));
     const present = benchmarks.filter((b) => b.cell);
+    // LLM baskets aggregate field-relative standings (so an easy benchmark can't
+    // dominate a hard one) and impute a mild floor for missing benchmarks, so a
+    // model covering only 2 of a 3-benchmark basket (e.g. omitting Humanity's
+    // Last Exam) can't outrank one that disclosed all three. World-model axes
+    // keep a plain absolute mean — their suites are non-overlapping, so a missing
+    // cell is expected and there's rarely a field to rank within.
     const score = present.length
-      ? round1(
-          present.reduce((acc, b) => acc + b.cell!.normalized, 0) / present.length,
-        )
+      ? model.category === "llm"
+        ? compositeIndex(
+            present.map((b) => b.cell!.relative),
+            benchmarks.length,
+          )
+        : round1(
+            present.reduce((acc, b) => acc + b.cell!.normalized, 0) /
+              present.length,
+          )
       : null;
     return {
       industry,
@@ -88,6 +106,7 @@ export interface PreviewAxis {
 export interface ModelPreviewData {
   axes: PreviewAxis[];
   pricing: Pricing | null;
+  speed: Speed | null;
 }
 
 /** Slim per-model payload for the leaderboard hover preview. */
@@ -102,6 +121,7 @@ export function buildModelPreview(modelId: string): ModelPreviewData {
         }))
       : [],
     pricing: pricing[modelId] ?? null,
+    speed: speed[modelId] ?? null,
   };
 }
 
@@ -147,9 +167,20 @@ export function buildIndustryDetail(industryId: string): IndustryDetail | null {
         .map((bid) => row.cells[bid])
         .filter((c): c is LeaderboardCell => Boolean(c));
       if (!present.length) return null;
-      const score = round1(
-        present.reduce((acc, c) => acc + c.normalized, 0) / present.length,
-      );
+      // Rank on field-relative standings with a mild floor for missing
+      // benchmarks (LLM baskets): a model missing one of the industry's
+      // benchmarks (e.g. Humanity's Last Exam) can't outrank a model that
+      // disclosed the whole basket, and no single easy benchmark dominates.
+      // World-model suites are non-overlapping by design — keep a plain mean.
+      const score =
+        category === "llm"
+          ? compositeIndex(
+              present.map((c) => c.relative),
+              benchmarks.length,
+            )!
+          : round1(
+              present.reduce((acc, c) => acc + c.normalized, 0) / present.length,
+            );
       return {
         model: row.model,
         provider: row.provider,

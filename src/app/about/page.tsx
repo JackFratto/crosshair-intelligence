@@ -51,8 +51,8 @@ const ROADMAP = [
     phase: "Phase 3 — World models",
     status: "later",
     points: [
-      "Stand up harnesses for physical prediction, planning, and video coherence.",
-      "Track V-JEPA, Genie, Cosmos, and newcomers like Kona as results mature.",
+      "Track world models (V-JEPA 2, Cosmos, Veo 3, Wan, HunyuanVideo, Sora, Genie 3, Marble, Ray 3) as a cited roster, attaching per-benchmark scores wherever models actually publish them.",
+      "Surface fragmented suites — video understanding & anticipation (Something-Something v2, EPIC-Kitchens-100, Perception Test), generative physics (Physics-IQ), and physical-AI generation (PAI-Bench) — without faking a composite the data can't support.",
       "Co-develop benchmark definitions with the community as the field consolidates.",
     ],
   },
@@ -110,12 +110,21 @@ export default function AboutPage() {
           </li>
         </ul>
         <p className="text-muted-foreground">
-          The <span className="text-foreground">Crosshair Index</span> is the
-          mean of a model&rsquo;s normalized scores, shown only when the model
-          covers at least 40% of its category&rsquo;s benchmarks — otherwise a
-          model with one cherry-picked result could top the chart. The
-          Artificial Analysis Intelligence Index is itself a composite, included
-          here as one normalized input alongside the individual benchmarks.
+          The <span className="text-foreground">Crosshair Index</span> averages
+          a model&rsquo;s standing <em>relative to the field</em> on each
+          benchmark — its min–max position within that column — rather than its
+          raw normalized score. This keeps any one benchmark from dominating by
+          its absolute difficulty: an easy benchmark where everyone clusters near
+          90% can&rsquo;t outweigh a brutal one like Humanity&rsquo;s Last Exam
+          where everyone clusters near 40%, and a model can&rsquo;t climb just by
+          reporting more of the easy ones. Benchmarks a model hasn&rsquo;t
+          disclosed aren&rsquo;t dropped from the average either — they&rsquo;re
+          imputed at a mild, slightly-below-median floor, so omitting a benchmark
+          can only ever cost a model, never lift it. The index is shown only when
+          a model covers at least 40% of its category&rsquo;s benchmarks —
+          otherwise a single cherry-picked result could carry it. The Artificial
+          Analysis Intelligence Index is itself a composite, included here as one
+          input alongside the individual benchmarks.
         </p>
       </Section>
 
